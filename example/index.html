@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+    <title>Recording example</title>
+</head>
+<body>
+<video id="source" width="600px" autoplay></video>
+<video id="result" width="600px" controls></video>
+<br>
+<button id="start" disabled>start</button>
+<button id="stop" disabled>stop</button>
+<script>
+    class Recorder {
+        constructor(stream) {
+            this.recorder = new MediaRecorder(stream);
+            this.recorder.onstart = () => this.onstart();
+            this.recorder.onstop = () => {
+                this.ws.close();
+                this.onstop(`../${this.id}.webm`);
+            };
+            this.recorder.ondataavailable = e => {
+                this.ws.send(new Blob([e.data], { type: 'application/octet-binary' }));
+                this.index++;
+                this.chunks.push(e.data);
+            };
+        }
+
+        start() {
+            this.index = 0;
+            this.chunks = [];
+            this.ws = new WebSocket("ws://localhost:8888/ws");
+            this.ws.onmessage = m => this.id = m.data;
+            return this.recorder.start(1000);
+        }
+
+        stop() {
+            this.recorder.stop();
+        }
+    }
+
+
+    const source = document.getElementById('source');
+    const result = document.getElementById('result');
+    const start = document.getElementById('start');
+    const stop = document.getElementById('stop');
+
+
+    navigator.mediaDevices.getUserMedia({video: true})
+        .then(stream => {
+            const recorder = new Recorder(stream);
+
+            start.onclick = () => {
+                start.disabled = true;
+                recorder.start();
+            };
+            stop.onclick = () => {
+                stop.disabled = true;
+                recorder.stop();
+            };
+
+            recorder.onstart = () => stop.disabled = false;
+            recorder.onstop = url => {
+                result.src = url;
+                start.disabled = false;
+            };
+
+            source.src = URL.createObjectURL(stream);
+            start.disabled = false;
+        });
+</script>
+</body>
+</html>
