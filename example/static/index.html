@@ -16,7 +16,7 @@
             this.recorder.onstart = () => this.onstart();
             this.recorder.onstop = () => {
                 this.ws.close();
-                this.onstop(`../${this.id}.webm`);
+                this.onstop(`http://localhost:8081/${this.id}.webm`);
             };
             this.recorder.ondataavailable = e => {
                 this.ws.send(new Blob([e.data], { type: 'application/octet-binary' }));
@@ -28,7 +28,7 @@
         start() {
             this.index = 0;
             this.chunks = [];
-            this.ws = new WebSocket("ws://localhost:8888/ws");
+            this.ws = new WebSocket("ws://localhost:8443/ws");
             this.ws.onmessage = m => this.id = m.data;
             return this.recorder.start(1000);
         }
@@ -45,7 +45,7 @@
     const stop = document.getElementById('stop');
 
 
-    navigator.mediaDevices.getUserMedia({video: true})
+    navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             const recorder = new Recorder(stream);
 

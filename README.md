@@ -2,12 +2,13 @@
 
 ## Build
 
-    $ go build
+    $ docker-compose build
 
 ## Run
     
-    $ ./webrecording
+    $ docker-compose up
     
 ## Have fun
 
-Start any static http server (for example `node-static`) in project root and open the example page. (for example `http://127.0.0.1:8080/example/`)
+- Recording client will be on port 8082 on your docker host
+- REST service will be on port 8080

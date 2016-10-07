@@ -1,0 +1,33 @@
+version: '2'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8443:443"
+    volumes:
+      - recording-storage:/recording-storage
+    depends_on:
+      - rest
+  rest:
+    build:
+      context: ./rest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - recording_db
+  recording_db:
+    image: postgres
+  storage:
+    image: nginx
+    ports:
+      - "8081:80"
+    volumes:
+      - recording-storage:/usr/share/nginx/html
+  example:
+    build: ./example
+    ports:
+      - "8082:80"
+volumes:
+  recording-storage: {}
