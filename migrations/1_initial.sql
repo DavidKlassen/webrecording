@@ -1,6 +1,6 @@
 -- +migrate Up
 CREATE TABLE recordings (
-  id BIGINT,
+  id NUMERIC,
   url TEXT,
   CONSTRAINT pk_recordings PRIMARY KEY (id)
 );

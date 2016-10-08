@@ -8,6 +8,7 @@ import (
 	"github.com/rubenv/sql-migrate"
 	"log"
 	"net/http"
+	"time"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 
 var db *sql.DB
 
-type Recording struct {
+type recording struct {
 	ID  int64  `json:"id"`
 	URL string `json:"url"`
 }
@@ -28,9 +29,9 @@ func index(w http.ResponseWriter, _ *http.Request) {
 	rows, err := db.Query(query)
 	check(err)
 
-	res := make([]Recording, 0)
+	res := make([]recording, 0)
 	for rows.Next() {
-		var rec Recording
+		var rec recording
 		err := rows.Scan(&rec.ID, &rec.URL)
 		check(err)
 		res = append(res, rec)
@@ -42,7 +43,7 @@ func index(w http.ResponseWriter, _ *http.Request) {
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	var rec Recording
+	var rec recording
 	err := json.NewDecoder(r.Body).Decode(&rec)
 	check(err)
 
@@ -67,8 +68,14 @@ func main() {
 	db, err = sql.Open("postgres", *dbinfo)
 	check(err)
 	defer db.Close()
-	err = db.Ping()
-	check(err)
+
+	for {
+		err = db.Ping()
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
 
 	migrations := &migrate.FileMigrationSource{
 		Dir: *migrationsDir,

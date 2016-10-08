@@ -18,6 +18,10 @@ var (
 	port       = flag.String("port", "443", "The application port")
 	nodeId     = flag.Int64("node", 0, "Snowflake node")
 	storageDir = flag.String("storage", "/recording-storage/", "Path to the storage directory")
+)
+
+var (
+	restURL = "http://rest/"
 	restClient = http.Client{}
 )
 
@@ -50,7 +54,7 @@ func serve(ws *websocket.Conn) {
 
 	body, err := json.Marshal(rec)
 	check(err)
-	req, err := http.NewRequest(http.MethodPut, "http://rest/", bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPut, restURL, bytes.NewReader(body))
 	check(err)
 	_, err = restClient.Do(req)
 	check(err)
