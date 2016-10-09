@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Recordings</title>
+</head>
+<body>
+<h1>Recordings</h1>
+<table id="recordings">
+    <tr>
+        <th>ID</th>
+        <th>File Name</th>
+        <th>Actions</th>
+    </tr>
+</table>
+<script>
+    const recordingsEl = document.querySelector('#recordings');
+
+    fetch('http://rest.localhost')
+        .then(res => res.json())
+        .then(recordings => {
+            recordings.forEach(r => {
+                const row = document.createElement('tr');
+                const id = document.createElement('td');
+                const fileName = document.createElement('td');
+                const actions = document.createElement('td');
+                const view = document.createElement('a');
+                id.innerHTML = r.id;
+                fileName.innerHTML = r.fileName;
+                view.href = `/storage/${r.fileName}`;
+                view.innerHTML = 'view';
+                actions.appendChild(view);
+                row.appendChild(id);
+                row.appendChild(fileName);
+                row.appendChild(actions);
+                recordingsEl.appendChild(row);
+            });
+        });
+</script>
+</body>
+</html>

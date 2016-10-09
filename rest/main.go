@@ -20,19 +20,19 @@ var (
 var db *sql.DB
 
 type recording struct {
-	ID  int64  `json:"id"`
-	URL string `json:"url"`
+	ID       string `json:"id"`
+	FileName string `json:"fileName"`
 }
 
 func index(w http.ResponseWriter, _ *http.Request) {
-	query := "SELECT id, url FROM recordings"
+	query := "SELECT id, file_name FROM recordings"
 	rows, err := db.Query(query)
 	check(err)
 
 	res := make([]recording, 0)
 	for rows.Next() {
 		var rec recording
-		err := rows.Scan(&rec.ID, &rec.URL)
+		err := rows.Scan(&rec.ID, &rec.FileName)
 		check(err)
 		res = append(res, rec)
 	}
@@ -47,13 +47,15 @@ func create(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&rec)
 	check(err)
 
-	_, err = db.Exec("INSERT INTO recordings (id, url) VALUES($1, $2)", rec.ID, rec.URL)
+	_, err = db.Exec("INSERT INTO recordings (id, file_name) VALUES($1, $2)", rec.ID, rec.FileName)
 	check(err)
 
 	w.WriteHeader(http.StatusCreated)
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if r.Method == http.MethodGet {
 		index(w, r)
 	} else if r.Method == http.MethodPut {

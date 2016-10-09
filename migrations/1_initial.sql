@@ -1,7 +1,7 @@
 -- +migrate Up
 CREATE TABLE recordings (
-  id NUMERIC,
-  url TEXT,
+  id UUID,
+  file_name TEXT,
   CONSTRAINT pk_recordings PRIMARY KEY (id)
 );
 

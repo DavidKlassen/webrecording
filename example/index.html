@@ -5,7 +5,6 @@
 </head>
 <body>
 <video id="source" width="600px" autoplay></video>
-<video id="result" width="600px" controls></video>
 <br>
 <button id="start" disabled>start</button>
 <button id="stop" disabled>stop</button>
@@ -16,10 +15,10 @@
             this.recorder.onstart = () => this.onstart();
             this.recorder.onstop = () => {
                 this.ws.close();
-                this.onstop(`http://localhost:8081/${this.id}.webm`);
+                this.onstop();
             };
             this.recorder.ondataavailable = e => {
-                this.ws.send(new Blob([e.data], { type: 'application/octet-binary' }));
+                this.ws.send(new Blob([e.data]));
                 this.index++;
                 this.chunks.push(e.data);
             };
@@ -28,8 +27,7 @@
         start() {
             this.index = 0;
             this.chunks = [];
-            this.ws = new WebSocket("ws://localhost:8443/ws");
-            this.ws.onmessage = m => this.id = m.data;
+            this.ws = new WebSocket("ws://backend.localhost/");
             return this.recorder.start(1000);
         }
 
@@ -59,10 +57,7 @@
             };
 
             recorder.onstart = () => stop.disabled = false;
-            recorder.onstop = url => {
-                result.src = url;
-                start.disabled = false;
-            };
+            recorder.onstop = () => start.disabled = false;
 
             source.src = URL.createObjectURL(stream);
             start.disabled = false;

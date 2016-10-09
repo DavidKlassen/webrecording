@@ -2,34 +2,38 @@ version: '2'
 services:
   backend:
     build: ./backend
-    ports:
-      - "8443:443"
     volumes:
       - recording-storage:/recording-storage
+    environment:
+      - VIRTUAL_HOST=backend.localhost
     depends_on:
       - rest
   rest:
     build:
       context: ./rest
-    ports:
-      - "8080:80"
     volumes:
       - ./migrations:/migrations
     depends_on:
       - recording_db
+    environment:
+      - VIRTUAL_HOST=rest.localhost
   recording_db:
     image: postgres
-  storage:
+  static:
     image: nginx
-    ports:
-      - "8081:80"
     volumes:
-      - recording-storage:/usr/share/nginx/html
-  example:
-    image: nginx
+      - recording-storage:/usr/share/nginx/html/storage
+      - ./example:/usr/share/nginx/html/example
+      - ./admin:/usr/share/nginx/html/admin
+    environment:
+      - VIRTUAL_HOST=static.localhost
+  frontend:
+    image: jwilder/nginx-proxy
     ports:
-      - "8082:80"
+      - "80:80"
     volumes:
-      - ./example:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    environment:
+      - DEFAULT_HOST=static.localhost
 volumes:
   recording-storage: {}
