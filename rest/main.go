@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"flag"
+	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 	"github.com/rubenv/sql-migrate"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -53,16 +55,6 @@ func create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func serve(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	if r.Method == http.MethodGet {
-		index(w, r)
-	} else if r.Method == http.MethodPut {
-		create(w, r)
-	}
-}
-
 func main() {
 	flag.Parse()
 
@@ -89,9 +81,26 @@ func main() {
 		log.Printf("Applied %d migrations!\n", n)
 	}
 
-	http.HandleFunc("/", serve)
+	routes := []Route{
+		{
+			"RecordingsIndex",
+			"GET",
+			"/",
+			index,
+		},
+		{
+			"RecordingCreate",
+			"PUT",
+			"/",
+			create,
+		},
+	}
+	r := NewRouter(routes)
+	lr := handlers.CombinedLoggingHandler(os.Stdout, r)
+	clr := handlers.CORS()(lr)
+
 	log.Printf("Starting rest service on port :%s\n", *port)
-	log.Fatal(http.ListenAndServe(":"+*port, nil))
+	log.Fatal(http.ListenAndServe(":"+*port, clr))
 }
 
 func check(err error) {
