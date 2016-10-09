@@ -10,5 +10,7 @@
     
 ## Have fun
 
-- Example pate will be available on port 8082 on your docker host
-- REST service will be on port 8080
+- Example page is at http://localhost/example
+- Admin page is at http://localhost/admin
+- REST service is at http://rest.localhost
+- Backend service is at http://backend.localhost

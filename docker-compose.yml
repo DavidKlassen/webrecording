@@ -23,6 +23,7 @@ services:
     image: nginx
     volumes:
       - recording-storage:/usr/share/nginx/html/storage
+      - ./client:/usr/share/nginx/html/client
       - ./example:/usr/share/nginx/html/example
       - ./admin:/usr/share/nginx/html/admin
     environment:

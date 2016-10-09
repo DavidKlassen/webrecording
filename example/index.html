@@ -8,35 +8,9 @@
 <br>
 <button id="start" disabled>start</button>
 <button id="stop" disabled>stop</button>
+
+<script src="/client/client.js"></script>
 <script>
-    class Recorder {
-        constructor(stream) {
-            this.recorder = new MediaRecorder(stream);
-            this.recorder.onstart = () => this.onstart();
-            this.recorder.onstop = () => {
-                this.ws.close();
-                this.onstop();
-            };
-            this.recorder.ondataavailable = e => {
-                this.ws.send(new Blob([e.data]));
-                this.index++;
-                this.chunks.push(e.data);
-            };
-        }
-
-        start() {
-            this.index = 0;
-            this.chunks = [];
-            this.ws = new WebSocket("ws://backend.localhost/");
-            return this.recorder.start(1000);
-        }
-
-        stop() {
-            this.recorder.stop();
-        }
-    }
-
-
     const source = document.getElementById('source');
     const result = document.getElementById('result');
     const start = document.getElementById('start');
@@ -45,7 +19,7 @@
 
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
-            const recorder = new Recorder(stream);
+            const recorder = new webrecording.Recorder(stream);
 
             start.onclick = () => {
                 start.disabled = true;
