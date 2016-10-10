@@ -24,18 +24,11 @@
         .then(recordings => {
             recordings.forEach(r => {
                 const row = document.createElement('tr');
-                const id = document.createElement('td');
-                const fileName = document.createElement('td');
-                const actions = document.createElement('td');
-                const view = document.createElement('a');
-                id.innerHTML = r.id;
-                fileName.innerHTML = r.fileName;
-                view.href = `/storage/${r.fileName}`;
-                view.innerHTML = 'view';
-                actions.appendChild(view);
-                row.appendChild(id);
-                row.appendChild(fileName);
-                row.appendChild(actions);
+                row.innerHTML = [
+                    `<td>${r.id}</td>`,
+                    `<td>${r.fileName}</td>`,
+                    `<td><a href="/storage/${r.fileName}">view</a></td>`,
+                ].join('');
                 recordingsEl.appendChild(row);
             });
         });
