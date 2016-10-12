@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/satori/go.uuid"
 	"golang.org/x/net/websocket"
 	"io"
 	"log"
@@ -11,19 +10,17 @@ import (
 )
 
 func serve(ws *websocket.Conn) {
-	// generate new recording id and send to the client
-	id := uuid.NewV4()
-	websocket.Message.Send(ws, id.String())
-	log.Printf("Starting recording: %s\n", id.String())
+	var fileName string
+	websocket.Message.Receive(ws, &fileName)
+	log.Printf("Starting recording: %s\n", fileName)
 
 	// open new webm file
-	fileName := path.Join("/recording-storage/", id.String()+".webm")
-	f, _ := os.Create(fileName)
+	f, _ := os.Create(path.Join("/recording-storage/", fileName))
 	defer f.Close()
 
 	// stream to file
 	n, _ := io.Copy(f, ws)
-	log.Printf("Done recording: %s; bytes writtes: %d\n", id.String(), n)
+	log.Printf("Done recording: %s; bytes written: %d\n", fileName, n)
 }
 
 func main() {

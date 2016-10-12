@@ -18,6 +18,8 @@ window.webrecording.Recorder = class {
         this.index = 0;
         this.chunks = [];
         this.ws = new WebSocket("ws://backend.localhost/");
+        this.ws.onopen = () => this.ws.send('test.webm');
+
         return this.recorder.start(1000);
     }
 
