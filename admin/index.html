@@ -11,7 +11,6 @@
 <h1>Recordings</h1>
 <table id="recordings">
     <tr>
-        <th>ID</th>
         <th>File Name</th>
         <th>Actions</th>
     </tr>
@@ -20,14 +19,13 @@
     const recordingsEl = document.querySelector('#recordings');
 
     fetch('http://rest.localhost')
-        .then(res => res.json())
+        .then(res => res.text())
         .then(recordings => {
-            recordings.forEach(r => {
+            recordings.split('\n').slice(0, -1).forEach(r => {
                 const row = document.createElement('tr');
                 row.innerHTML = [
-                    `<td>${r.id}</td>`,
-                    `<td>${r.fileName}</td>`,
-                    `<td><a href="/storage/${r.fileName}">view</a></td>`,
+                    `<td>${r}</td>`,
+                    `<td><a href="/storage/${r}">view</a></td>`,
                 ].join('');
                 recordingsEl.appendChild(row);
             });

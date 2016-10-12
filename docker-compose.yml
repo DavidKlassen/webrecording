@@ -6,19 +6,13 @@ services:
       - recording-storage:/recording-storage
     environment:
       - VIRTUAL_HOST=backend.localhost
-    depends_on:
-      - rest
   rest:
     build:
       context: ./rest
     volumes:
-      - ./migrations:/migrations
-    depends_on:
-      - recording_db
+      - recording-storage:/storage
     environment:
       - VIRTUAL_HOST=rest.localhost
-  recording_db:
-    image: postgres
   static:
     image: nginx
     volumes:
