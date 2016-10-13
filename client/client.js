@@ -30,13 +30,13 @@ window.webrecording.Recorder = class extends webrecording.Pipeline {
             this.onstart();
         };
         this.recorder.ondataavailable = e => {
-            this.next.consume(e.data);
+            super.consume(e.data);
         };
     }
 
     start() {
         super.start();
-        this.recorder.start(1000);
+        this.recorder.start(3000);
     }
 
     stop() {
@@ -51,6 +51,13 @@ window.webrecording.Recorder = class extends webrecording.Pipeline {
 
     }
 
+};
+
+window.webrecording.BandwidthFilter = class extends webrecording.Pipeline {
+
+    constructor(next) {
+        super(next);
+    }
 };
 
 window.webrecording.Uploader = class extends webrecording.Pipeline {
@@ -83,5 +90,5 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
 };
 
 window.webrecording.default_pipeline = function (stream) {
-    return new webrecording.Recorder(stream, new webrecording.Uploader());
+    return new webrecording.Recorder(stream, new webrecording.BandwidthFilter(new webrecording.Uploader()));
 };
