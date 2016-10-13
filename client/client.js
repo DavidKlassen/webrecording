@@ -77,7 +77,6 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
 
     consume(data) {
         this.ws.send(new Blob([new Int32Array([0, data.size]), data]));
-        this.ws.send(new Blob([data]));
     }
 
     start() {
