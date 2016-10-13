@@ -76,6 +76,7 @@ window.webrecording.BandwidthFilter = class extends webrecording.Pipeline {
         for (const data of this.queue) {
             super.consume(data);
         }
+        this.queue = [];
         super.stop();
     }
 };
