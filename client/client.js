@@ -102,7 +102,7 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
             return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                 s4() + '-' + s4() + s4() + s4();
         })();
-        this.ws.onopen = () => this.ws.send(this.guid + '.webm');
+        this.ws.onopen = () => this.ws.send(guid + '.webm');
         this.nwChecker = setInterval(() => {
             let prev = webrecording.network.buffered.slice(-1)[0];
             webrecording.network.buffered.push(this.ws.bufferedAmount - prev);
