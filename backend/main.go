@@ -1,25 +1,25 @@
 package main
 
 import (
+	"encoding/binary"
 	"golang.org/x/net/websocket"
 	"io"
 	"log"
 	"net/http"
-	"encoding/binary"
 	"os"
 	"path"
 )
 
 type chunk struct {
-	index int32
+	index  int32
 	length int32
-	data []byte
+	data   []byte
 }
 
 type endpoint struct {
-	rc chan chunk
-	done chan int
-	name string
+	rc     chan chunk
+	done   chan int
+	name   string
 	chunks []chunk
 }
 
@@ -48,37 +48,64 @@ func serve(ws *websocket.Conn) {
 	var name string
 	err := websocket.Message.Receive(ws, &name)
 	check(err)
-	e, ok := endpoints[name];
+
+	e := fetchEndpoint(name)
+	for {
+		if !readData(ws, e) {
+			return
+		}
+	}
+}
+
+func serveHttp(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	name := r.Header.Get("name")
+	readData(r.Body, fetchEndpoint(name))
+}
+
+func fetchEndpoint(name string) endpoint {
+	e, ok := endpoints[name]
 	if !ok {
 		e = endpoint{
-			rc: make(chan chunk),
+			rc:   make(chan chunk),
 			done: make(chan int),
 			name: name,
 		}
 		endpoints[name] = e
 		go e.serve()
 	}
+	return e
+}
 
-	for {
-		var chunk chunk
-		err = binary.Read(ws, binary.LittleEndian, &chunk.index)
-		check(err)
-		if chunk.index == -1 {
-			e.done <- 0
-			return
-		}
-		err = binary.Read(ws, binary.LittleEndian, &chunk.length)
-		check(err)
-		log.Printf("len: %d\n", chunk.length)
-		chunk.data = make([]byte, chunk.length)
-		_, err = io.ReadFull(ws, chunk.data)
-		check(err)
-		e.rc <- chunk
+func readData(r io.Reader, e endpoint) bool {
+	var chunk chunk
+	err := binary.Read(r, binary.LittleEndian, &chunk.index)
+	check(err)
+	if chunk.index == -1 {
+		e.done <- 0
+		return false
 	}
+	err = binary.Read(r, binary.LittleEndian, &chunk.length)
+	check(err)
+	log.Printf("len: %d\n", chunk.length)
+
+	chunk.data = make([]byte, chunk.length)
+	_, err = io.ReadFull(r, chunk.data)
+	check(err)
+	e.rc <- chunk
+
+	return true
 }
 
 func main() {
 	http.Handle("/", websocket.Handler(serve))
+	http.HandleFunc("/chunk", serveHttp)
 	log.Println("Starting recording service on port 443")
 	log.Fatal(http.ListenAndServe(":443", nil))
 }

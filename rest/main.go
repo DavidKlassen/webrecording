@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"io/ioutil"
-	"fmt"
 )
 
 func index(w http.ResponseWriter, _ *http.Request) {
