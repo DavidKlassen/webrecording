@@ -83,16 +83,6 @@ window.webrecording.BandwidthFilter = class extends webrecording.Pipeline {
 window.webrecording.Uploader = class extends webrecording.Pipeline {
     constructor() {
         super();
-        this.guid = (() => {
-            function s4() {
-                return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-            }
-
-            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                s4() + '-' + s4() + s4() + s4();
-        })();
         this.nwChecker = 0;
     }
 
@@ -102,6 +92,16 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
 
     start() {
         this.ws = new WebSocket("ws://backend.localhost/");
+        let guid = (() => {
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                s4() + '-' + s4() + s4() + s4();
+        })();
         this.ws.onopen = () => this.ws.send(this.guid + '.webm');
         this.nwChecker = setInterval(() => {
             let prev = webrecording.network.buffered.slice(-1)[0];
