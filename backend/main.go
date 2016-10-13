@@ -61,13 +61,14 @@ func serve(ws *websocket.Conn) {
 
 func serveHttp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Name, Access-Control-Allow-Headers, Authorization, X-Requested-With")
 
 	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
 		return
 	}
 
-	name := r.Header.Get("name")
+	name := r.Header.Get("X-Name")
 	readData(r.Body, fetchEndpoint(name))
 }
 
