@@ -35,7 +35,9 @@ func (e endpoint) serve() {
 			e.chunks = append(e.chunks, chunk)
 		case <-e.done:
 			log.Printf("Done recording: %s\n; got %d chunks", e.name, len(e.chunks))
-			// do assembling here
+			for _, chunk := range e.chunks {
+				f.Write(chunk.data)
+			}
 			delete(endpoints, e.name)
 			return
 		}
