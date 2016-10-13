@@ -90,6 +90,6 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
     }
 };
 
-window.webrecording.default_pipeline = function (stream) {
+window.webrecording.defaultPipeline = function (stream) {
     return new webrecording.Recorder(stream, new webrecording.BandwidthFilter(new webrecording.Uploader()));
 };
