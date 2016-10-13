@@ -20,6 +20,7 @@ type endpoint struct {
 	rc chan chunk
 	done chan int
 	name string
+	chunks []chunk
 }
 
 func (e endpoint) serve() {
@@ -31,8 +32,10 @@ func (e endpoint) serve() {
 		select {
 		case chunk := <-e.rc:
 			log.Printf("chunk: %+v\n", chunk.index)
+			e.chunks = append(e.chunks, chunk)
 		case <-e.done:
-			log.Printf("Done recording: %s\n", e.name)
+			log.Printf("Done recording: %s\n; got %d chunks", e.name, len(e.chunks))
+			// do assembling here
 			delete(endpoints, e.name)
 			return
 		}
