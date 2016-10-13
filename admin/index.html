@@ -6,17 +6,38 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Recordings</title>
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+    <style>
+        video {
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
 </head>
 <body>
-<h1>Recordings</h1>
-<table id="recordings">
-    <tr>
-        <th>File Name</th>
-        <th>Actions</th>
-    </tr>
-</table>
+<div id="video" class="modal">
+    <div class="modal-content valign-wrapper">
+        <video src="" width="600px" height="400px" class="valign center-align" controls></video>
+    </div>
+</div>
+<div class="container">
+    <h1 class="card-panel teal lighten-2">Recordings</h1>
+    <table class="striped">
+        <thead>
+        <tr>
+            <th>File Name</th>
+            <th width="30%">Actions</th>
+        </tr>
+        </thead>
+        <tbody id="recordings"></tbody>
+    </table>
+</div>
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
 <script>
     const recordingsEl = document.querySelector('#recordings');
+    const videoEl = document.querySelector('video');
 
     fetch('http://rest.localhost')
         .then(res => res.text())
@@ -25,11 +46,16 @@
                 const row = document.createElement('tr');
                 row.innerHTML = [
                     `<td>${r}</td>`,
-                    `<td><a href="/storage/${r}">view</a></td>`,
+                    `<td><a class="modal-trigger waves-effect waves-light btn" href="#video" onclick="openVideo('/storage/${r}')">view</a><a class="waves-effect waves-light red darken-4 btn" style="margin-left: 40px">delete</a></td>`,
                 ].join('');
                 recordingsEl.appendChild(row);
             });
         });
+
+    function openVideo(src) {
+        videoEl.src = src;
+        $('#video').openModal();
+    }
 </script>
 </body>
 </html>

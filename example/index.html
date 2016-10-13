@@ -19,7 +19,7 @@
 
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
-            const recorder = new webrecording.Recorder(stream);
+            const recorder = window.webrecording.defaultPipeline(stream);
 
             start.onclick = () => {
                 start.disabled = true;
