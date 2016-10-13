@@ -5,22 +5,59 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"encoding/binary"
 	"os"
 	"path"
 )
 
-func serve(ws *websocket.Conn) {
-	var fileName string
-	websocket.Message.Receive(ws, &fileName)
-	log.Printf("Starting recording: %s\n", fileName)
+type chunk struct {
+	index int32
+	length int32
+	data []byte
+}
 
-	// open new webm file
-	f, _ := os.Create(path.Join("/recording-storage/", fileName))
+type endpoint struct {
+	rc chan chunk
+	done chan int
+	name string
+}
+
+func (e endpoint) serve() {
+	log.Printf("Starting recording: %s\n", e.name)
+	f, _ := os.Create(path.Join("/recording-storage/", e.name))
 	defer f.Close()
 
-	// stream to file
-	n, _ := io.Copy(f, ws)
-	log.Printf("Done recording: %s; bytes written: %d\n", fileName, n)
+	for {
+		select {
+		case chunk := <-e.rc:
+			log.Printf("chunk: %+v\n", chunk.index)
+		case <-e.done:
+			log.Printf("Done recording: %s\n", e.name)
+			return
+		}
+	}
+}
+
+func serve(ws *websocket.Conn) {
+	e := endpoint{
+		rc: make(chan chunk),
+		done: make(chan int),
+	}
+	websocket.Message.Receive(ws, &e.name)
+	go e.serve()
+	for {
+		var chunk chunk
+		binary.Read(ws, binary.LittleEndian, &chunk.index)
+		if chunk.index == -1 {
+			e.done <- 0
+			return
+		}
+		binary.Read(ws, binary.LittleEndian, &chunk.length)
+		log.Printf("len: %d\n", chunk.length)
+		chunk.data = make([]byte, chunk.length)
+		io.ReadFull(ws, chunk.data)
+		e.rc <- chunk
+	}
 }
 
 func main() {
