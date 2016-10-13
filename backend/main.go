@@ -36,7 +36,8 @@ func (e endpoint) serve() {
 		case <-e.done:
 			log.Printf("Done recording: %s\n; got %d chunks", e.name, len(e.chunks))
 			for _, chunk := range e.chunks {
-				f.Write(chunk.data)
+				_, err := f.Write(chunk.data)
+				check(err)
 			}
 			delete(endpoints, e.name)
 			return
@@ -50,6 +51,27 @@ func serve(ws *websocket.Conn) {
 	var name string
 	err := websocket.Message.Receive(ws, &name)
 	check(err)
+	e := fetchEndpoint(name)
+	for {
+		if !readData(ws, e) {
+			return
+		}
+	}
+}
+
+func serveHttp(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	name := r.Header.Get("name")
+	readData(r.Body, fetchEndpoint(name))
+}
+
+func fetchEndpoint(name string) endpoint {
 	e, ok := endpoints[name]
 	if !ok {
 		e = endpoint{
@@ -60,27 +82,32 @@ func serve(ws *websocket.Conn) {
 		endpoints[name] = e
 		go e.serve()
 	}
+	return e
+}
 
-	for {
-		var chunk chunk
-		err = binary.Read(ws, binary.LittleEndian, &chunk.index)
-		check(err)
-		if chunk.index == -1 {
-			e.done <- 0
-			return
-		}
-		err = binary.Read(ws, binary.LittleEndian, &chunk.length)
-		check(err)
-		log.Printf("len: %d\n", chunk.length)
-		chunk.data = make([]byte, chunk.length)
-		_, err = io.ReadFull(ws, chunk.data)
-		check(err)
-		e.rc <- chunk
+func readData(r io.Reader, e endpoint) bool {
+	var chunk chunk
+	err := binary.Read(r, binary.LittleEndian, &chunk.index)
+	check(err)
+	if chunk.index == -1 {
+		e.done <- 0
+		return false
 	}
+	err = binary.Read(r, binary.LittleEndian, &chunk.length)
+	check(err)
+	log.Printf("len: %d\n", chunk.length)
+
+	chunk.data = make([]byte, chunk.length)
+	_, err = io.ReadFull(r, chunk.data)
+	check(err)
+	e.rc <- chunk
+
+	return true
 }
 
 func main() {
 	http.Handle("/", websocket.Handler(serve))
+	http.HandleFunc("/chunk", serveHttp)
 	log.Println("Starting recording service on port 443")
 	log.Fatal(http.ListenAndServe(":443", nil))
 }
