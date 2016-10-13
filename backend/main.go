@@ -1,25 +1,25 @@
 package main
 
 import (
+	"encoding/binary"
 	"golang.org/x/net/websocket"
 	"io"
 	"log"
 	"net/http"
-	"encoding/binary"
 	"os"
 	"path"
 )
 
 type chunk struct {
-	index int32
+	index  int32
 	length int32
-	data []byte
+	data   []byte
 }
 
 type endpoint struct {
-	rc chan chunk
-	done chan int
-	name string
+	rc     chan chunk
+	done   chan int
+	name   string
 	chunks []chunk
 }
 
@@ -50,10 +50,10 @@ func serve(ws *websocket.Conn) {
 	var name string
 	err := websocket.Message.Receive(ws, &name)
 	check(err)
-	e, ok := endpoints[name];
+	e, ok := endpoints[name]
 	if !ok {
 		e = endpoint{
-			rc: make(chan chunk),
+			rc:   make(chan chunk),
 			done: make(chan int),
 			name: name,
 		}
