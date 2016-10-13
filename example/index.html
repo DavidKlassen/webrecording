@@ -2,13 +2,34 @@
 <html>
 <head>
     <title>Recording example</title>
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+    <style>
+        video {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+        #actions {
+            justify-content: center;
+        }
+
+        #actions button {
+            margin: 20px;
+        }
+    </style>
 </head>
 <body>
-<video id="source" width="600px" autoplay></video>
-<br>
-<button id="start" disabled>start</button>
-<button id="stop" disabled>stop</button>
 
+<div class="container">
+    <h1 class="card-panel teal lighten-2">Demo</h1>
+    <video id="source" width="800px" height="450px" autoplay></video>
+    <div id="actions" class="valign-wrapper">
+        <button id="start" class="btn" disabled>start</button>
+        <button id="stop" class="btn" disabled>stop</button>
+    </div>
+</div>
 <script src="/client/client.js"></script>
 <script>
     const source = document.getElementById('source');
@@ -17,7 +38,7 @@
     const stop = document.getElementById('stop');
 
 
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({ video: { width: 800, height: 450 } })
         .then(stream => {
             const recorder = window.webrecording.defaultPipeline(stream);
 
