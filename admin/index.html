@@ -13,6 +13,18 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+
+
+
+
+
+
+
+
+
+
+
     </style>
 </head>
 <body>
@@ -46,7 +58,10 @@
                 const row = document.createElement('tr');
                 row.innerHTML = [
                     `<td>${r}</td>`,
-                    `<td><a class="modal-trigger waves-effect waves-light btn" href="#video" onclick="openVideo('/storage/${r}')">view</a><a class="waves-effect waves-light red darken-4 btn" style="margin-left: 40px">delete</a></td>`,
+                    `<td>
+                        <a class="modal-trigger waves-effect waves-light btn" href="#video" onclick="openVideo('/storage/${r}')">view</a>
+                        <a class="waves-effect waves-light red darken-4 btn" style="margin-left: 40px" onclick="deleteVideo(this,'${r}')">delete</a>
+                    </td>`,
                 ].join('');
                 recordingsEl.appendChild(row);
             });
@@ -56,6 +71,21 @@
         videoEl.src = src;
         $('#video').openModal();
     }
+
+    function deleteVideo(element,id){
+        fetch('http://rest.localhost/deleteVideo/'+id,{ method: "POST"})
+        .then(_=>element.parentElement.parentElement.remove())
+    }
+
+
+
+
+
+
+
+
+
+
 </script>
 </body>
 </html>
