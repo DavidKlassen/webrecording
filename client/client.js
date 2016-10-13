@@ -159,11 +159,11 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
         super();
         this.nwChecker = 0;
         this.transport = new webrecording.Websocket();
-        this.transport.fallback = () => {
+        this.transport.fallback(() => {
             this.transport.close(true);
             this.transport = new webrecording.Http();
             this.transport.setup(this.guid);
-        };
+        });
     }
 
     consume(data) {
