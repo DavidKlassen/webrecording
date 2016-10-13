@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"github.com/gorilla/mux"
+	"path"
 )
 
 type ByModTime []os.FileInfo
@@ -16,8 +16,7 @@ func (mt ByModTime) Len() int           { return len(mt) }
 func (mt ByModTime) Swap(i, j int)      { mt[i], mt[j] = mt[j], mt[i] }
 func (mt ByModTime) Less(i, j int) bool { return mt[i].ModTime().After(mt[j].ModTime()) }
 
-func index(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func index(w http.ResponseWriter) {
 	files, _ := ioutil.ReadDir("/storage")
 	sort.Sort(ByModTime(files))
 	for _, f := range files {
@@ -25,25 +24,31 @@ func index(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func deleteVideo(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	vars := mux.Vars(r)
-	videoName := vars["name"]
-
-	err := os.Remove("/storage/" + videoName)
+func del(w http.ResponseWriter, name string) {
+	err := os.Remove(path.Join("/storage/", name))
 	check(err)
-	log.Println("File deleted " + videoName)
+	log.Println("File deleted " + name)
+	w.WriteHeader(http.StatusNoContent)
+}
 
+func serve(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodGet {
+		index(w)
+	} else if r.Method == http.MethodDelete {
+		del(w, r.RequestURI)
+	} else if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, OPTIONS")
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func main() {
-
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", index)
-	router.HandleFunc("/deleteVideo/{name}", deleteVideo)
+	http.HandleFunc("/", serve)
 	log.Println("Starting rest service on port 80")
-	log.Fatal(http.ListenAndServe(":80", router))
+	log.Fatal(http.ListenAndServe(":80", nil))
 
 }
 
