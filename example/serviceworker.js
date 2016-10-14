@@ -75,11 +75,6 @@ webrecording.Transport = class {
 
 webrecording.Websocket = class extends webrecording.Transport {
 
-    constructor() {
-        this.wsTimeout = 5000;
-        this.wsTimer = null;
-    }
-
     fallback(func) {
         this._fallback = func;
     }
@@ -102,11 +97,11 @@ webrecording.Websocket = class extends webrecording.Transport {
         console.log(`Sending chunk ${data.index} of length ${data.payload.size}`);
         this.ws.send(new Blob([new Int32Array([data.index, data.payload.size]), data.payload]));
         clearTimeout(this.wsTimer);
-        this.wsTimer = setTimeout(this.stop.bind(this), this.wsTimeout);
+        this.wsTimer = setTimeout(this.close.bind(this), 5000);
     }
 
     close() {
-        window.clearInterval(this.nwChecker);
+        clearInterval(this.nwChecker);
         this.ws.send(new Int32Array([-1]).buffer);
         this.ws.close();
     }
@@ -130,7 +125,7 @@ webrecording.Http = class extends webrecording.Transport {
     }
 
     close() {
-        window.clearInterval(this.nwChecker);
+        clearInterval(this.nwChecker);
         let headers = new Headers();
         headers.append('X-Name', this.guid + '.webm');
         let dummy = new Uint8Array([253, 0, 128, 1]);
@@ -176,7 +171,7 @@ webrecording.Uploader = class extends webrecording.Pipeline {
     }
 
     stop(error = false) {
-        window.clearInterval(this.nwChecker);
+        clearInterval(this.nwChecker);
         if (!error) {
             this.guid = undefined;
             this.transport.close();
