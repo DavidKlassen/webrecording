@@ -53,6 +53,8 @@ func (e endpoint) serve() {
 				_, err := f.Write(chunk.data)
 				check(err)
 			}
+			close(e.done)
+			close(e.rc)
 			delete(endpoints, e.name)
 			return
 		}

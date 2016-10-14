@@ -7,7 +7,7 @@ window.webrecording.restrictions = (() => {
     coeff = coeff > 5 ? 5 : coeff;
     const width = 640 / coeff;
     const height = 480 / coeff;
-    const frameRate = Math.round(25 / coeff);
+    const frameRate =coeff > 3 ? 15 : 25;
 
     return {
         video: {
