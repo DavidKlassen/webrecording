@@ -2,13 +2,21 @@ window.webrecording = {};
 
 window.webrecording.network = {buffered: [0]};
 
-window.webrecording.restrictions = {
-    video: {
-        width: {min: 320, max: 320},
-        height: {min: 240, max: 240},
-        frameRate: {min: 10, max: 10}
+window.webrecording.restrictions = (() => {
+    let coeff = Math.round((window.performance.timing.responseStart - window.performance.timing.fetchStart) / 250.0) + 1;
+    coeff = coeff > 5 ? 5 : coeff;
+    const width = 640 / coeff;
+    const height = 480 / coeff;
+    const frameRate = Math.round(25 / coeff);
+
+    return {
+        video: {
+            width: {min: width, max: width},
+            height: {min: height, max: height},
+            frameRate: {min: frameRate, max: frameRate}
+        }
     }
-};
+})();
 
 window.webrecording.Pipeline = class {
     constructor(next) {
@@ -223,23 +231,23 @@ window.webrecording.WorkerConnector = class  extends webrecording.Pipeline {
         this.worker.postMessage({command: 'stop'});
     }
 
-}
+};
 
 window.webrecording.defaultPipeline = function (stream) {
     return Promise.resolve(new webrecording.Recorder(stream, new webrecording.BandwidthFilter(new webrecording.Uploader())));
 };
 
 
-window.webrecording.workerPipeline = function(stream) {
+window.webrecording.workerPipeline = function (stream) {
     if ('serviceWorker' in navigator) {
         return navigator.serviceWorker.register('./serviceworker.js', {scope: './'})
-            .then(function(reg) {
+            .then(function (reg) {
                 console.log('Registration succeeded. Scope is ' + reg.scope);
                 console.log(navigator.serviceWorker.controller);
                 // registration worked
                 return new webrecording.Recorder(stream, new webrecording.WorkerConnector(navigator.serviceWorker.controller));
                 //return navigator.serviceWorker.ready;
-            }).catch(function(error) {
+            }).catch(function (error) {
                 // registration failed
                 console.log('Registration failed with ' + error);
             });
