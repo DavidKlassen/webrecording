@@ -16,15 +16,15 @@ window.webrecording.Pipeline = class {
     }
 
     consume(data) {
-        this.next.consume(data);
+        this.next && this.next.consume(data);
     }
 
     start() {
-        this.next.start();
+        this.next && this.next.start();
     }
 
     stop() {
-        this.next.stop();
+        this.next && this.next.stop();
     }
 };
 
@@ -204,6 +204,47 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
     }
 };
 
+
+window.webrecording.WorkerConnector = class  extends webrecording.Pipeline {
+    constructor(worker, next) {
+        super(next);
+        this.worker = worker;
+    }
+
+    consume(data) {
+        this.worker.postMessage(data);
+    }
+
+    start() {
+        this.worker.postMessage({command: 'start'});
+    }
+
+    stop() {
+        this.worker.postMessage({command: 'stop'});
+    }
+
+}
+
 window.webrecording.defaultPipeline = function (stream) {
-    return new webrecording.Recorder(stream, new webrecording.BandwidthFilter(new webrecording.Uploader()));
+    return Promise.resolve(new webrecording.Recorder(stream, new webrecording.BandwidthFilter(new webrecording.Uploader())));
+};
+
+
+window.webrecording.workerPipeline = function(stream) {
+    if ('serviceWorker' in navigator) {
+        return navigator.serviceWorker.register('./serviceworker.js', {scope: './'})
+            .then(function(reg) {
+                console.log('Registration succeeded. Scope is ' + reg.scope);
+                console.log(navigator.serviceWorker.controller);
+                // registration worked
+                return new webrecording.Recorder(stream, new webrecording.WorkerConnector(navigator.serviceWorker.controller));
+                //return navigator.serviceWorker.ready;
+            }).catch(function(error) {
+                // registration failed
+                console.log('Registration failed with ' + error);
+            });
+    }
+    else {
+        return Promise.reject();
+    }
 };
