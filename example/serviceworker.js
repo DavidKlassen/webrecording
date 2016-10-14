@@ -28,14 +28,19 @@ webrecording.Uploader = class extends webrecording.Pipeline {
     constructor() {
         super();
         this.nwChecker = 0;
+        this.wsTimeout = 5000;
+        this.wsTimer = null;
     }
 
     consume(data) {
         console.log(`Sending chunk ${data.index} of length ${data.payload.size}`);
         this.ws.send(new Blob([new Int32Array([data.index, data.payload.size]), data.payload]));
+        clearTimeout(this.wsTimer);
+        this.wsTimer = setTimeout(this.stop.bind(this), this.wsTimeout);
     }
 
     start() {
+        console.log("Uploader starting")
         this.ws = new WebSocket("ws://backend.localhost/");
         let guid = (() => {
             function s4() {
@@ -58,6 +63,7 @@ webrecording.Uploader = class extends webrecording.Pipeline {
         clearInterval(this.nwChecker);
         this.ws.send(new Int32Array([-1]).buffer);
         this.ws.close();
+        console.log("Uploader stopped")
     }
 };
 
