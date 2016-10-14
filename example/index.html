@@ -39,22 +39,23 @@
 
     navigator.mediaDevices.getUserMedia(window.webrecording.restrictions)
         .then(stream => {
-            const recorder = window.webrecording.defaultPipeline(stream);
+            const recorder = window.webrecording.workerPipeline(stream)
+                .then((recorder) => {
+                    start.onclick = () => {
+                        start.disabled = true;
+                        recorder.start();
+                    };
+                    stop.onclick = () => {
+                        stop.disabled = true;
+                        recorder.stop();
+                    };
 
-            start.onclick = () => {
-                start.disabled = true;
-                recorder.start();
-            };
-            stop.onclick = () => {
-                stop.disabled = true;
-                recorder.stop();
-            };
+                    recorder.onstart = () => stop.disabled = false;
+                    recorder.onstop = () => start.disabled = false;
 
-            recorder.onstart = () => stop.disabled = false;
-            recorder.onstop = () => start.disabled = false;
-
-            source.src = URL.createObjectURL(stream);
-            start.disabled = false;
+                    source.src = URL.createObjectURL(stream);
+                    start.disabled = false;
+                });
         });
 </script>
 </body>
