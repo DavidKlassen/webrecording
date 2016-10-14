@@ -37,7 +37,7 @@
     const stop = document.getElementById('stop');
 
 
-    navigator.mediaDevices.getUserMedia({ video: { width: 800, height: 450 } })
+    navigator.mediaDevices.getUserMedia(window.webrecording.restrictions)
         .then(stream => {
             const recorder = window.webrecording.defaultPipeline(stream);
 

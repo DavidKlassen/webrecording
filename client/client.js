@@ -2,6 +2,14 @@ window.webrecording = {};
 
 window.webrecording.network = {buffered: [0]};
 
+window.webrecording.restrictions = {
+    video: {
+        width: {min: 320, max: 320},
+        height: {min: 240, max: 240},
+        frameRate: {min: 10, max: 10}
+    }
+};
+
 window.webrecording.Pipeline = class {
     constructor(next) {
         this.next = next;
@@ -82,11 +90,14 @@ window.webrecording.BandwidthFilter = class extends webrecording.Pipeline {
 };
 
 window.webrecording.Transport = class {
-    setup() {}
+    setup() {
+    }
 
-    close() {}
+    close() {
+    }
 
-    send(data) {}
+    send(data) {
+    }
 
 };
 
@@ -172,19 +183,19 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
 
     start() {
         this.guid = this.guid || (() => {
-            function s4() {
-                return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-            }
+                function s4() {
+                    return Math.floor((1 + Math.random()) * 0x10000)
+                        .toString(16)
+                        .substring(1);
+                }
 
-            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                s4() + '-' + s4() + s4() + s4();
-        })();
+                return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                    s4() + '-' + s4() + s4() + s4();
+            })();
         this.transport.setup(this.guid);
     }
 
-    stop(error=false) {
+    stop(error = false) {
         window.clearInterval(this.nwChecker);
         if (!error) {
             this.guid = undefined;
