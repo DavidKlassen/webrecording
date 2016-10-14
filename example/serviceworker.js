@@ -61,18 +61,6 @@ webrecording.Transport = class {
 
 };
 
-webrecording.Transport = class {
-    setup() {
-    }
-
-    close() {
-    }
-
-    send(data) {
-    }
-
-};
-
 webrecording.Websocket = class extends webrecording.Transport {
 
     fallback(func) {
@@ -101,9 +89,16 @@ webrecording.Websocket = class extends webrecording.Transport {
     }
 
     close() {
-        clearInterval(this.nwChecker);
-        this.ws.send(new Int32Array([-1]).buffer);
-        this.ws.close();
+        if(this.ws.readyState !== this.ws.CLOSED || this.ws.readyState !== this.ws.CLOSING) {
+            clearInterval(this.nwChecker);
+            try {
+                this.ws.send(new Int32Array([-1]).buffer);
+                this.ws.close();
+            } catch (err) {
+                //shitty timeout stuff
+            }
+
+        }
     }
 };
 
@@ -143,10 +138,9 @@ webrecording.Uploader = class extends webrecording.Pipeline {
 
     constructor() {
         super();
-        this.nwChecker = 0;
         this.transport = new webrecording.Websocket();
         this.transport.fallback(() => {
-            this.transport.close(true);
+            this.stop(true);
             this.transport = new webrecording.Http();
             this.transport.setup(this.guid);
         });
