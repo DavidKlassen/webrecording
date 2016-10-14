@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 )
 
 type chunk struct {
@@ -23,6 +24,18 @@ type endpoint struct {
 	chunks []chunk
 }
 
+type byIndex []chunk
+
+func (i byIndex) Len() int {
+	return len(i)
+}
+func (chunk byIndex) Swap(i, j int) {
+	chunk[i], chunk[j] = chunk[j], chunk[i]
+}
+func (chunk byIndex) Less(i, j int) bool {
+	return chunk[i].index < chunk[j].index
+}
+
 func (e endpoint) serve() {
 	log.Printf("Starting recording: %s\n", e.name)
 	f, _ := os.Create(path.Join("/recording-storage/", e.name))
@@ -35,6 +48,7 @@ func (e endpoint) serve() {
 			e.chunks = append(e.chunks, chunk)
 		case <-e.done:
 			log.Printf("Done recording: %s\n; got %d chunks", e.name, len(e.chunks))
+			sort.Sort(byIndex(e.chunks))
 			for _, chunk := range e.chunks {
 				_, err := f.Write(chunk.data)
 				check(err)
