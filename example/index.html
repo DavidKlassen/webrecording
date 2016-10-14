@@ -39,7 +39,7 @@
 
     navigator.mediaDevices.getUserMedia(window.webrecording.restrictions)
         .then(stream => {
-            const recorder = window.webrecording.workerPipeline(stream)
+            const recorder = window.webrecording.workerBufferedPipeline(stream)
                 .then((recorder) => {
                     start.onclick = () => {
                         start.disabled = true;
@@ -55,8 +55,17 @@
 
                     source.src = URL.createObjectURL(stream);
                     start.disabled = false;
+
+
+                    window.addEventListener('beforeunload', (e) => {
+                        recorder.stop()
+                        e.returnValue = 'Are you sure to close the page?';
+                        return e.returnValue;
+                    });
                 });
         });
+
+
 </script>
 </body>
 </html>

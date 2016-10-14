@@ -31,27 +31,35 @@ webrecording.Uploader = class extends webrecording.Pipeline {
     }
 
     consume(data) {
-        console.log(`Sending chunk ${data.index} of length ${data.payload.size}`);
-        this.ws.send(new Blob([new Int32Array([data.index, data.payload.size]), data.payload]));
+        let timeout = this.ws.readyState ? 0 : 500;
+        setTimeout(() => {
+            console.log(`Sending chunk ${data.index} of length ${data.payload.size}`);
+            this.ws.send(new Blob([new Int32Array([data.index, data.payload.size]), data.payload]));
+        }, timeout);
     }
 
     start() {
-        this.ws = new WebSocket("ws://backend.localhost/");
-        let guid = (() => {
-            function s4() {
-                return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-            }
+        return new Promise((resolve, reject) => {
+            this.ws = new WebSocket("ws://backend.localhost/");
+            let guid = (() => {
+                function s4() {
+                    return Math.floor((1 + Math.random()) * 0x10000)
+                        .toString(16)
+                        .substring(1);
+                }
 
-            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                s4() + '-' + s4() + s4() + s4();
-        })();
-        this.ws.onopen = () => this.ws.send(guid + '.webm');
-        this.nwChecker = setInterval(() => {
-            let prev = webrecording.network.buffered.slice(-1)[0];
-            webrecording.network.buffered.push(this.ws.bufferedAmount - prev);
-        }, 200);
+                return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                    s4() + '-' + s4() + s4() + s4();
+            })();
+            this.ws.onopen = () => {
+                this.ws.send(guid + '.webm');
+                resolve();
+            }
+            this.nwChecker = setInterval(() => {
+                let prev = webrecording.network.buffered.slice(-1)[0];
+                webrecording.network.buffered.push(this.ws.bufferedAmount - prev);
+            }, 200);
+        })
     }
 
     stop() {

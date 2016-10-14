@@ -204,6 +204,34 @@ window.webrecording.Uploader = class extends webrecording.Pipeline {
     }
 };
 
+window.webrecording.Buffer = class  extends webrecording.Pipeline {
+    constructor(next) {
+        super(next);
+        this.buffer = [];
+    }
+
+    consume(data) {
+        this.buffer.push(data);
+        console.log(`buffer length is ${this.buffer.length}`);
+    }
+
+    start() {
+        this.buffer = [];
+    }
+
+    stop() {
+        console.log(`flushing ${this.buffer.length} items from buffer`);
+        if (this.next) {
+            this.next.start().then(() => {
+                let item;
+                while(item = this.buffer.shift()) {
+                    this.next.consume(item);
+                }
+                //this.next.stop();
+            });
+        }
+    }
+}
 
 window.webrecording.WorkerConnector = class  extends webrecording.Pipeline {
     constructor(worker, next) {
@@ -216,7 +244,10 @@ window.webrecording.WorkerConnector = class  extends webrecording.Pipeline {
     }
 
     start() {
-        this.worker.postMessage({command: 'start'});
+        return new Promise(resolve => {
+            this.worker.postMessage({command: 'start'});
+            resolve();
+        })
     }
 
     stop() {
@@ -224,6 +255,8 @@ window.webrecording.WorkerConnector = class  extends webrecording.Pipeline {
     }
 
 }
+
+
 
 window.webrecording.defaultPipeline = function (stream) {
     return Promise.resolve(new webrecording.Recorder(stream, new webrecording.BandwidthFilter(new webrecording.Uploader())));
@@ -238,6 +271,25 @@ window.webrecording.workerPipeline = function(stream) {
                 console.log(navigator.serviceWorker.controller);
                 // registration worked
                 return new webrecording.Recorder(stream, new webrecording.WorkerConnector(navigator.serviceWorker.controller));
+                //return navigator.serviceWorker.ready;
+            }).catch(function(error) {
+                // registration failed
+                console.log('Registration failed with ' + error);
+            });
+    }
+    else {
+        return Promise.reject();
+    }
+};
+
+window.webrecording.workerBufferedPipeline = function(stream) {
+    if ('serviceWorker' in navigator) {
+        return navigator.serviceWorker.register('./serviceworker.js', {scope: './'})
+            .then(function(reg) {
+                console.log('Registration succeeded. Scope is ' + reg.scope);
+                console.log(navigator.serviceWorker.controller);
+                // registration worked
+                return new webrecording.Recorder(stream, new webrecording.Buffer(new webrecording.WorkerConnector(navigator.serviceWorker.controller)));
                 //return navigator.serviceWorker.ready;
             }).catch(function(error) {
                 // registration failed
