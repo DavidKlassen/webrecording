@@ -99,6 +99,7 @@ webrecording.Websocket = class extends webrecording.Transport {
     }
 
     send(data) {
+        console.log(`Sending chunk ${data.index} of length ${data.payload.size}`);
         this.ws.send(new Blob([new Int32Array([data.index, data.payload.size]), data.payload]));
         clearTimeout(this.wsTimer);
         this.wsTimer = setTimeout(this.stop.bind(this), this.wsTimeout);
